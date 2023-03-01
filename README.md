@@ -1,2 +1,2 @@
-# phenostation
+# Phenostation
 Low-cost phenotyping station 
