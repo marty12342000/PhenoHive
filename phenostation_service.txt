@@ -1,0 +1,1 @@
+Fichier texte on se trouve les recommandations qu'il faudra mettre dans le fichier phenostation.service afin qu'on puisse faire tourner le script en arrière plan
