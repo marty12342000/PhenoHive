@@ -1,2 +1,2 @@
 # Phenostation
-Low-cost phenotyping station 
+Raspberry pi based low-cost phenotyping station 
