@@ -1,5 +1,13 @@
+
+'''
+Script python qui récupère les images et les mesures de poids et les envoies à la base de données influxDB
+'''
+
+
+
 import time
 import datetime
+'''
 import RPi.GPIO as GPIO
 from picamera2 import Picamera2, Preview
 
@@ -19,11 +27,12 @@ def photo():
 	cam.capture_file("/home/pi/Desktop/memoire/image/%s.jpg"  % date)
 	cam.stop_preview()
 	cam.stop()
+'''
 while True:
-	GPIO.output(LED, GPIO.HIGH)
+	#GPIO.output(LED, GPIO.HIGH)
 	print("High")
 	#photo()
 	time.sleep(2)
-	GPIO.output(LED,GPIO.LOW)
+	#GPIO.output(LED,GPIO.LOW)
 	print("Low")
 	time.sleep(2)
