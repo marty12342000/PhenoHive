@@ -7,7 +7,7 @@ import time
 import datetime
 import RPi.GPIO as GPIO
 from picamera2 import Picamera2, Preview
-from data_acquisition import process_pipeline
+from data_acquisition import get_height_pix
 import configparser
 
 from influxdb_client import InfluxDBClient, Point, WritePrecision
@@ -66,7 +66,7 @@ def main():
 		GPIO.output(LED,GPIO.LOW)
 
 		# Get numerical value from the photo
-		growth_value = process_pipeline(path_img)
+		growth_value = get_height_pix(path_img, pot_lim=117)
 	
 		# Send data to the DB
 		write_api = client.write_api(write_options=ASYNCHRONOUS)
