@@ -42,6 +42,11 @@ def main():
 
 	path = str(parser["Path_to_save_img"]["absolute_path"])
 
+	pot_limit = int(parser["image_arg"]["pot_limit"])
+	channel = str(parser["image_arg"]["k"])
+	kernel_size = int(parser["image_arg"]["kernel_size"])
+	fill_size = int(parser["image_arg"]["fill_size"])
+
     # Initialization of the camera and GPIO's
     GPIO.setmode(GPIO.BOARD)
 	GPIO.setwarnings(False)
@@ -66,7 +71,7 @@ def main():
 		GPIO.output(LED,GPIO.LOW)
 
 		# Get numerical value from the photo
-		growth_value = get_height_pix(path_img, pot_lim=117)
+		growth_value = get_height_pix(image_path=path_img, pot_limit=pot_limit, channel=channel, kernel_size=kernel_size, fill_size=fill_size)
 	
 		# Send data to the DB
 		write_api = client.write_api(write_options=ASYNCHRONOUS)
@@ -78,4 +83,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
