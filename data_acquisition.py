@@ -13,6 +13,8 @@ import configparser
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 from influxdb_client.client.write_api import ASYNCHRONOUS
 
+cam = Picamera2
+
 def photo(path):
 	cam.start_preview(Preview.NULL)
 	cam.start()
