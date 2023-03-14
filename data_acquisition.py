@@ -7,7 +7,7 @@ import time
 import datetime
 import RPi.GPIO as GPIO
 from picamera2 import Picamera2, Preview
-from data_acquisition import get_height_pix
+from image_processing import get_height_pix
 import configparser
 
 from influxdb_client import InfluxDBClient, Point, WritePrecision
@@ -18,7 +18,7 @@ def photo(path):
 	cam.start()
 	time.sleep(8)
 	date = datetime.datetime.now()
-    path_img = path + "/%s.jpg"  % date
+	path_img = path + "/%s.jpg"  % date
 	cam.capture_file(path)
 	cam.stop_preview()
 	cam.stop()
@@ -31,7 +31,7 @@ def photo(path):
 def main():
     # Parse Config.ini file
 	parser = configparser.ConfigParser()
-	parser.read(config.ini)
+	parser.read('config.ini')
 
 	led = int(parser["Pins"]["led"])
 
@@ -43,12 +43,11 @@ def main():
 	path = str(parser["Path_to_save_img"]["absolute_path"])
 
 	pot_limit = int(parser["image_arg"]["pot_limit"])
-	channel = str(parser["image_arg"]["k"])
+	channel = str(parser["image_arg"]["channel"])
 	kernel_size = int(parser["image_arg"]["kernel_size"])
 	fill_size = int(parser["image_arg"]["fill_size"])
-
-    # Initialization of the camera and GPIO's
-    GPIO.setmode(GPIO.BOARD)
+	# Initialization of the camera and GPIO's
+	GPIO.setmode(GPIO.BOARD)
 	GPIO.setwarnings(False)
 	LED = led
 	GPIO.setup(LED, GPIO.OUT)
@@ -61,11 +60,10 @@ def main():
     	token=token,
     	org=org
 	)
-    
-
-    while True:
+	
+	while True:
 		# Take photo
-        GPIO.output(LED, GPIO.HIGH)
+		GPIO.output(LED, GPIO.HIGH)
 		path_img = photo(path)
 		time.sleep(2)
 		GPIO.output(LED,GPIO.LOW)
@@ -76,7 +74,7 @@ def main():
 		# Send data to the DB
 		write_api = client.write_api(write_options=ASYNCHRONOUS)
 		p = Point("my_measurement").field("Growth", float(data)).field("Growth_station_one", int(growth_value) )
-        write_api.write(bucket=bucket, org=org, record=p)
+		write_api.write(bucket=bucket, org=org, record=p)
 
 		time.sleep(2)
         
