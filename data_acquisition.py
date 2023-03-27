@@ -19,7 +19,7 @@ def photo(path):
 	cam.start_preview(Preview.NULL)
 	cam.start()
 	time.sleep(8)
-	date = datetime.datetime.now()
+	date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 	path_img = path + "/%s.jpg"  % date
 	cam.capture_file(path_img)
 	cam.stop_preview()

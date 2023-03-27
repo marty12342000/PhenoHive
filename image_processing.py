@@ -4,10 +4,13 @@ Script python qui process les images prisent par la caméra pour évaluer la cro
 import matplotlib.pyplot as plt
 from plantcv import plantcv as pcv
 import numpy as np
+import datetime
 import os
 import cv2
 
 def get_height_pix(image_path, pot_limit, channel='k', kernel_size=3, fill_size=1):
+    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    path = "%s.jpg"  % date
     
     pcv.params.debug = None
     
@@ -22,7 +25,7 @@ def get_height_pix(image_path, pot_limit, channel='k', kernel_size=3, fill_size=
     edges_crop = pcv.crop(edges, 5, 5, height- pot_limit - 10, width - 10)
     new_height = edges_crop.shape[0]
     edges_filled = pcv.fill(edges_crop, fill_size)
-    #pcv.plot_image(edges_filled)
+    pcv.print_image(edges_filled, path)
     non_zero = np.nonzero(edges_filled)
     #height = position of the last non-zero pixel
     plant_height_pix = new_height - min(non_zero[0])
