@@ -10,7 +10,7 @@ import cv2
 
 def get_height_pix(image_path, pot_limit, channel='k', kernel_size=3, fill_size=1):
     date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    path = "%s.jpg"  % date
+    path = "/home/pi/Desktop/edges_img/%s.jpg"  % date
     
     pcv.params.debug = None
     
