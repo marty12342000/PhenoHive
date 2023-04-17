@@ -9,7 +9,6 @@ import RPi.GPIO as gpio
 from picamera2 import Picamera2, Preview
 from image_processing import get_height_pix
 import configparser
-from PIL import Image
 import ST7735 as TFT
 import Adafruit_GPIO as GPIO
 import Adafruit_GPIO.SPI as SPI
@@ -19,15 +18,14 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 from hx711 import HX711
-
-
+from show_display import show_image, show_logo, show_measuring_menu, show_menu, show_cal_prev_menu, show_cal_menu
 
 def init():
     # Parse Config.ini file
     parser = configparser.ConfigParser()
     parser.read('config.ini')
 
-    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx, tare, raw_weight
+    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx
     LED = int(parser["Pins"]["led"])
         
     token = str(parser["InfluxDB"]["token"])
@@ -48,8 +46,6 @@ def init():
 
     #Hx711 
     hx = HX711(dout_pin=5, pd_sck_pin=6)
-    tare = sum(hx.get_raw_data())/5
-    raw_weight = 0
         
     # Screen initialization
     WIDTH = 128
@@ -83,28 +79,20 @@ def init():
 
 
 
-
-
 def photo(path, preview = False, time_to_wait = 8):
     cam.start_preview(Preview.NULL)
     cam.start()
     time.sleep(time_to_wait)
     if preview == False:
-        date = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")      
+        name = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")      
     else :
-        date = "img" 
+        name = "img" 
         
-    path_img = path + "/%s.jpg"  % date
+    path_img = path + "/%s.jpg"  % name
     cam.capture_file(path_img)
     cam.stop_preview()
     cam.stop()
     return path_img
-
-
-def show_image(disp, path_img, WIDTH, HEIGHT):
-    image = Image.open(path_img)
-    image = image.rotate(0).resize((WIDTH, HEIGHT))
-    disp.display(image)
     
     
 def send_to_db(client, bucket, point, field, value): 
@@ -113,23 +101,13 @@ def send_to_db(client, bucket, point, field, value):
     write_api.write(bucket=bucket, record=p)
 
 
-def show_logo():
-    logo = Image.open("/home/pi/Desktop/phenostation/assets/logo_phenohive.jpg")
-    logo = logo.rotate(0).resize((128, 70))
-    return logo
-
-def show_measuring_menu():
-    img = Image.new('RGB', (WIDTH, HEIGHT), color=(255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-    draw.text((0, 60), "Collecting data...", font=font, fill=(0, 0, 0))
-    logo = show_logo()
-    img.paste(logo, (0, 0))
-    disp.display(img)
+def get_weight():
+    raw_weight = sum(hx.get_raw_data())/5
+    return raw_weight
+    
 
 def start_measuring():
     
-    show_measuring_menu()
     while True:
         # Take photo
         gpio.output(LED, gpio.LOW)
@@ -142,106 +120,62 @@ def start_measuring():
         # Send data to the DB
         send_to_db(client, bucket, "my_measurement", "Growth_station_test", growth_value)
         time.sleep(1190)
-        
-
-def plant_preview():
-    while True:
-        path_img = photo("/home/pi/Desktop/phenostation/assets", preview = True, time_to_wait=1)
-        show_image(disp, path_img, WIDTH, HEIGHT)
-        if gpio.input(but_right) == False:
-            show_menu()
-            break
-        
-def show_menu():
-    # Initialize display.    
-    img = Image.new('RGB', (WIDTH, HEIGHT), color=(255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    #Menu
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 15)
-    draw.text((40, 80), "Menu", font=font, fill=(0, 0, 0))
-    #Button
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-    draw.text((0, 130), "<-- Config        Start -->", font=font, fill=(0, 0, 0))
-    logo = show_logo()
-    img.paste(logo, (0, 0))
-    disp.display(img)
-
-
-def show_cal_prev_menu():
-    img = Image.new('RGB', (WIDTH, HEIGHT), color=(255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    #Menu
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 13)
-    draw.text((13, 80), "Configuration", font=font, fill=(0, 0, 0))
-    #Button
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-    draw.text((0, 130), "<-- Calib           Prev -->", font=font, fill=(0, 0, 0))
-    logo = show_logo()
-    img.paste(logo, (0, 0))
-    disp.display(img)
-
-
-def show_cal_menu():
-    img = Image.new('RGB', (WIDTH, HEIGHT), color=(255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    #Menu
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-    draw.text((0, 80), "Tare :" +  str(tare), font=font, fill=(0, 0, 0))
-    draw.text((0, 95), "Raw val :" +  str(raw_weight), font=font, fill=(0, 0, 0))
-    #Button
-    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-    draw.text((0, 130), "<-- Measure    Back -->", font=font, fill=(0, 0, 0))
-    logo = show_logo()
-    img.paste(logo, (0, 0))
-    disp.display(img)
-
-
-
-def get_weight():
-    raw_weight = sum(hx.get_raw_data())/5
-    return raw_weight
-    
-
-
-def weight_calibration():
-    while True:
-        show_cal_menu()
-        if gpio.input(but_left) == False:
-                global raw_weight
-                raw_weight = get_weight()
-        
-        if gpio.input(but_right) == False:
-                show_menu()
-                break
-    
+  
     
 def main():
-    show_menu()
-    while True:
-        #Choose Button
-        if gpio.input(but_left) == False:
-            show_cal_prev_menu()
-            time.sleep(1)
-            while True:
-                if gpio.input(but_left) == False:
-                    weight_calibration()
-                    time.sleep(1)
-                    break
 
-                if gpio.input(but_right) == False:
-                    plant_preview()
-                    time.sleep(1)
-                    break
-            
-        if gpio.input(but_right) == False:
-            start_measuring()
-
-    
-        
-
-if __name__ == "__main__":
     init()
     disp.clear()
     disp.begin()
-    show_image(disp, "/home/pi/Desktop/phenostation/assets/logo_elia.jpg", WIDTH, HEIGHT)
+    show_image(disp, WIDTH, HEIGHT, "/home/pi/Desktop/phenostation/assets/logo_elia.jpg")
+    
+    while True:
+        show_menu(disp, WIDTH, HEIGHT)
+        #Main menu loop
+
+        if gpio.input(but_left) == False:
+            # Configuration Menu loop
+            show_cal_prev_menu(disp, WIDTH, HEIGHT)
+            time.sleep(1)
+            while True:
+
+                if gpio.input(but_right) == False:
+                    # Preview loop
+                    while True:
+                        path_img = photo("/home/pi/Desktop/phenostation/assets", preview = True, time_to_wait=1)
+                        show_image(disp, WIDTH, HEIGHT, path_img)
+
+                        if gpio.input(but_right) == False:
+                                # Go back to the main menu
+                                break
+                    time.sleep(1)
+                    break
+
+                if gpio.input(but_left) == False:
+                    # Calibration loop
+                    tare = get_weight()
+                    raw_weight = 0
+                    while True:
+                        show_cal_menu(disp, WIDTH, HEIGHT, raw_weight, tare)
+                        if gpio.input(but_left) == False:
+                                # Get measurement
+                                raw_weight = get_weight()
+        
+                        if gpio.input(but_right) == False:
+                                # Go back to the main menu
+                                break
+                    time.sleep(1)
+                    break
+
+                
+            
+        if gpio.input(but_right) == False:
+            # Measuring loop
+            show_measuring_menu(disp, WIDTH, HEIGHT)
+            start_measuring()
+
+    
+
+if __name__ == "__main__":
+
     main()
