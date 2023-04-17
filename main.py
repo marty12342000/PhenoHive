@@ -18,14 +18,14 @@ from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
 from hx711 import HX711
-from show_display import show_image, show_logo, show_measuring_menu, show_menu, show_cal_prev_menu, show_cal_menu
+from show_display import show_image, show_logo, show_measuring_menu, show_menu, show_cal_prev_menu, show_cal_menu, show_collecting_data
 
 def init():
     # Parse Config.ini file
     parser = configparser.ConfigParser()
     parser.read('config.ini')
 
-    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx
+    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx, time_interval
     LED = int(parser["Pins"]["led"])
         
     token = str(parser["InfluxDB"]["token"])
@@ -40,7 +40,9 @@ def init():
     channel = str(parser["image_arg"]["channel"])
     kernel_size = int(parser["image_arg"]["kernel_size"])
     fill_size = int(parser["image_arg"]["fill_size"])
-        
+    
+    time_interval = int(parser["time_interval"]["time_interval"])
+
     # InfluxDB client initialization
     client = InfluxDBClient(url=url, token=token, org=org)
 
@@ -104,22 +106,24 @@ def send_to_db(client, bucket, point, field, value):
 def get_weight():
     raw_weight = sum(hx.get_raw_data())/5
     return raw_weight
-    
 
-def start_measuring():
-    
-    while True:
-        # Take photo
-        gpio.output(LED, gpio.LOW)
-        path_img = photo(path)
-        time.sleep(2)
-        gpio.output(LED,gpio.HIGH)
-        # Get numerical value from the photo
-        growth_value = get_height_pix(image_path=path_img, pot_limit=pot_limit, channel=channel, kernel_size=kernel_size, fill_size=fill_size)
-        print(growth_value)
-        # Send data to the DB
-        send_to_db(client, bucket, "my_measurement", "Growth_station_test", growth_value)
-        time.sleep(1190)
+
+def measurement_pipeline():
+    # Get photo
+    gpio.output(LED, gpio.LOW)
+    path_img = photo(path)
+    time.sleep(2)
+    gpio.output(LED,gpio.HIGH)
+    print(path_img)
+    # Get numerical value from the photo
+    growth_value = get_height_pix(image_path=path_img, pot_limit=pot_limit, channel=channel, kernel_size=kernel_size, fill_size=fill_size)
+    # Get weight 
+    weight = get_weight()
+    # Send data to the DB
+    send_to_db(client, bucket, "my_measurement", "Growth_station_test", growth_value)
+    send_to_db(client, bucket, "my_measurement", "weight_station_test", weight)
+    return growth_value, weight
+     
   
     
 def main():
@@ -128,7 +132,7 @@ def main():
     disp.clear()
     disp.begin()
     show_image(disp, WIDTH, HEIGHT, "/home/pi/Desktop/phenostation/assets/logo_elia.jpg")
-    
+
     while True:
         show_menu(disp, WIDTH, HEIGHT)
         #Main menu loop
@@ -170,10 +174,29 @@ def main():
                 
             
         if gpio.input(but_right) == False:
+            time.sleep(1)
             # Measuring loop
-            show_measuring_menu(disp, WIDTH, HEIGHT)
-            start_measuring()
+            growth_value = 0
+            weight = 0
+            time_delta = datetime.timedelta(seconds=time_interval)
+            time_now = datetime.datetime.now()
+            time_nxt_measure = time_now + time_delta
+            while True :
+                # Get time
+                time_now = datetime.datetime.now()
+                # Showing measurement
+                show_measuring_menu(disp, WIDTH, HEIGHT, str(weight), str(growth_value), str(time_now.strftime("%Y/%m/%d %H:%M:%S")), str(time_nxt_measure.strftime("%H:%M:%S")))
 
+                if time_now >= time_nxt_measure :
+                        time_nxt_measure = time_now + time_delta
+                        show_collecting_data(disp, WIDTH, HEIGHT)
+                        growth_value, weight = measurement_pipeline()
+
+                if gpio.input(but_right) == False:
+                            # Go back to the main menu
+                            break
+            time.sleep(1)
+                
     
 
 if __name__ == "__main__":

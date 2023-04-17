@@ -20,11 +20,15 @@ def show_logo(disp, WIDTH, HEIGHT):
     return logo
 
 
-def show_measuring_menu(disp, WIDTH, HEIGHT):
+def show_measuring_menu(disp, WIDTH, HEIGHT, weight, growth, time_now, time_next_measure):
     img = Image.new('RGB', (WIDTH, HEIGHT), color=(255, 255, 255))
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-    draw.text((0, 80), "Collecting data...", font=font, fill=(0, 0, 0))
+    draw.text((5, 70), str(time_now), font=font, fill=(0, 0, 0))
+    draw.text((0, 90), "Next : " + str(time_next_measure), font=font, fill=(0, 0, 0))
+    draw.text((0, 100), "Weight : " + str(weight), font=font, fill=(0, 0, 0))
+    draw.text((0, 110), "Growth : " + str(growth), font=font, fill=(0, 0, 0))
+    draw.text((80, 130), "Stop -->", font=font, fill=(0, 0, 0))
     logo = show_logo(disp, WIDTH, HEIGHT)
     img.paste(logo, (0, 0))
     disp.display(img)
@@ -71,6 +75,17 @@ def show_cal_menu(disp, WIDTH, HEIGHT, raw_weight, tare):
     #Button
     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
     draw.text((0, 130), "<-- Measure    Back -->", font=font, fill=(0, 0, 0))
+    logo = show_logo(disp, WIDTH, HEIGHT)
+    img.paste(logo, (0, 0))
+    disp.display(img)
+
+
+def show_collecting_data(disp, WIDTH, HEIGHT):
+    img = Image.new('RGB', (WIDTH, HEIGHT), color=(255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    #Menu
+    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 12)
+    draw.text((5, 80), "Collecting data...", font=font, fill=(0, 0, 0))
     logo = show_logo(disp, WIDTH, HEIGHT)
     img.paste(logo, (0, 0))
     disp.display(img)
