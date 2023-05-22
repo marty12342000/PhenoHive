@@ -21,11 +21,11 @@ from hx711 import HX711
 from show_display import show_image, show_logo, show_measuring_menu, show_menu, show_cal_prev_menu, show_cal_menu, show_collecting_data
 
 def init():
+
+    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx, time_interval, load_cell_cal, tare, ID_station, parser, is_shutdown
     # Parse Config.ini file
     parser = configparser.ConfigParser()
     parser.read('config.ini')
-
-    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx, time_interval, load_cell_cal, tare, ID_station
         
     token = str(parser["InfluxDB"]["token"])
     org = str(parser["InfluxDB"]["org"])
@@ -33,6 +33,8 @@ def init():
     url = str(parser["InfluxDB"]["url"])
         
     ID_station = str(parser["ID_station"]["ID"])
+
+    is_shutdown = bool(parser['Var_Verif']["is_shutdown"])
 
     path = str(parser["Path_to_save_img"]["absolute_path"])
 
@@ -50,8 +52,8 @@ def init():
     hx = HX711(dout_pin=5, pd_sck_pin=6)
     
     #Load cell calibration coefficient
-    load_cell_cal = 1
-    tare = 0
+    load_cell_cal = int(parser["cal_coef"]["load_cell_cal"])
+    tare = int(parser["cal_coef"]["tare"])
 
     # Screen initialization
     WIDTH = 128
@@ -169,6 +171,7 @@ def main():
                     global tare, load_cell_cal
                     
                     tare = get_weight()
+                    parser.set('cal_coef', "tare", str(tare))
                     raw_weight = 0
                     while True:
                         show_cal_menu(disp, WIDTH, HEIGHT, raw_weight, tare)
@@ -176,6 +179,7 @@ def main():
                                 # Get measurement
                                 raw_weight = get_weight()
                                 load_cell_cal = 1500/(raw_weight-tare)
+                                parser.set('cal_coef', "load_cell_cal", str(load_cell_cal))
         
                         if gpio.input(but_right) == False:
                                 # Go back to the main menu
@@ -185,7 +189,9 @@ def main():
 
                 
             
-        if gpio.input(but_right) == False:
+        if gpio.input(but_right) == False or is_shutdown == True:
+
+            parser.set('Var_Verif', "is_shutdown", "True")
             time.sleep(1)
             # Measuring loop
             growth_value = 0
