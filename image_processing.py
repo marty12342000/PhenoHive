@@ -30,6 +30,8 @@ def get_height_pix(image_path, pot_limit, channel='k', kernel_size=3, fill_size=
     
     return plant_height_pix
 
+
+
 def get_segment_list(image_path, channel='k', kernel_size=20):
 
     pcv.params.debug = None
@@ -74,6 +76,8 @@ def get_segment_list(image_path, channel='k', kernel_size=20):
     path_lengths = pcv.outputs.observations['default']['segment_path_length']['value']
     
     return path_lengths
+
+
 
 def get_total_length(image_path, channel='k', kernel_size=20):
     

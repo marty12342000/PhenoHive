@@ -74,7 +74,7 @@ def show_cal_menu(disp, WIDTH, HEIGHT, raw_weight, tare):
     draw.text((0, 95), "Raw val :" +  str(raw_weight), font=font, fill=(0, 0, 0))
     #Button
     font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 10)
-    draw.text((0, 130), "<-- Measure    Back -->", font=font, fill=(0, 0, 0))
+    draw.text((0, 130), "<-- Get Calib    Back -->", font=font, fill=(0, 0, 0))
     logo = show_logo(disp, WIDTH, HEIGHT)
     img.paste(logo, (0, 0))
     disp.display(img)

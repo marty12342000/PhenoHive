@@ -7,7 +7,7 @@ import time
 import datetime
 import RPi.GPIO as gpio
 from picamera2 import Picamera2, Preview
-from image_processing import get_height_pix
+from image_processing import get_height_pix, get_total_length
 import configparser
 import ST7735 as TFT
 import Adafruit_GPIO as GPIO
@@ -25,14 +25,14 @@ def init():
     parser = configparser.ConfigParser()
     parser.read('config.ini')
 
-    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx, time_interval
-    LED = int(parser["Pins"]["led"])
+    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx, time_interval, load_cell_cal, tare, ID_station
         
     token = str(parser["InfluxDB"]["token"])
     org = str(parser["InfluxDB"]["org"])
     bucket = str(parser["InfluxDB"]["bucket"])
     url = str(parser["InfluxDB"]["url"])
         
+    ID_station = str(parser["ID_station"]["ID"])
 
     path = str(parser["Path_to_save_img"]["absolute_path"])
 
@@ -48,7 +48,11 @@ def init():
 
     #Hx711 
     hx = HX711(dout_pin=5, pd_sck_pin=6)
-        
+    
+    #Load cell calibration coefficient
+    load_cell_cal = 1
+    tare = 0
+
     # Screen initialization
     WIDTH = 128
     HEIGHT = 160
@@ -70,6 +74,8 @@ def init():
     # Camera and LED init
     cam = Picamera2()
     gpio.setwarnings(False)
+
+    LED = 23
     gpio.setup(LED, gpio.OUT)
     gpio.output(LED,gpio.HIGH)
         
@@ -109,19 +115,22 @@ def get_weight():
 
 
 def measurement_pipeline():
+    global load_cell_cal
     # Get photo
     gpio.output(LED, gpio.LOW)
-    path_img = photo(path)
+    path_img = photo(path, preview=True, time_to_wait=6)
     time.sleep(2)
     gpio.output(LED,gpio.HIGH)
     print(path_img)
     # Get numerical value from the photo
-    growth_value = get_height_pix(image_path=path_img, pot_limit=pot_limit, channel=channel, kernel_size=kernel_size, fill_size=fill_size)
+    growth_value = get_total_length(image_path=path_img, channel=channel, kernel_size=kernel_size)
     # Get weight 
     weight = get_weight()
+    weight = weight*load_cell_cal
     # Send data to the DB
-    send_to_db(client, bucket, "my_measurement", "Growth_station_test", growth_value)
-    send_to_db(client, bucket, "my_measurement", "weight_station_test", weight)
+    field_ID = "SationID_%s" % ID_station
+    send_to_db(client, bucket, "Growth", field_ID, growth_value)
+    send_to_db(client, bucket, "Weight", field_ID, weight)
     return growth_value, weight
      
   
@@ -146,7 +155,7 @@ def main():
                 if gpio.input(but_right) == False:
                     # Preview loop
                     while True:
-                        path_img = photo("/home/pi/Desktop/phenostation/assets", preview = True, time_to_wait=1)
+                        path_img = photo(path, preview = True, time_to_wait=1)
                         show_image(disp, WIDTH, HEIGHT, path_img)
 
                         if gpio.input(but_right) == False:
@@ -157,6 +166,8 @@ def main():
 
                 if gpio.input(but_left) == False:
                     # Calibration loop
+                    global tare, load_cell_cal
+                    
                     tare = get_weight()
                     raw_weight = 0
                     while True:
@@ -164,6 +175,7 @@ def main():
                         if gpio.input(but_left) == False:
                                 # Get measurement
                                 raw_weight = get_weight()
+                                load_cell_cal = 1500/(raw_weight-tare)
         
                         if gpio.input(but_right) == False:
                                 # Go back to the main menu
