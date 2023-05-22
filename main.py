@@ -211,6 +211,7 @@ def main():
                         growth_value, weight = measurement_pipeline()
 
                 if gpio.input(but_right) == False:
+                            parser.set('Var_Verif', "is_shutdown", "False")
                             # Go back to the main menu
                             break
             time.sleep(1)
