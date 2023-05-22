@@ -52,8 +52,8 @@ def init():
     hx = HX711(dout_pin=5, pd_sck_pin=6)
     
     #Load cell calibration coefficient
-    load_cell_cal = int(parser["cal_coef"]["load_cell_cal"])
-    tare = int(parser["cal_coef"]["tare"])
+    load_cell_cal = float(parser["cal_coef"]["load_cell_cal"])
+    tare = float(parser["cal_coef"]["tare"])
 
     # Screen initialization
     WIDTH = 128
