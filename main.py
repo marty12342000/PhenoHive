@@ -171,7 +171,7 @@ def main():
                     global tare, load_cell_cal
                     
                     tare = get_weight()
-                    parser.set('cal_coef', "tare", str(tare))
+                    parser['cal_coef'][ "tare"] = tare
                     raw_weight = 0
                     while True:
                         show_cal_menu(disp, WIDTH, HEIGHT, raw_weight, tare)
@@ -179,7 +179,9 @@ def main():
                                 # Get measurement
                                 raw_weight = get_weight()
                                 load_cell_cal = 1500/(raw_weight-tare)
-                                parser.set('cal_coef', "load_cell_cal", str(load_cell_cal))
+                                parser['cal_coef'][ "load_cell_cal"] = load_cell_cal
+                                with open("config.ini", 'w') as configfile:
+                                    parser.write(configfile)
         
                         if gpio.input(but_right) == False:
                                 # Go back to the main menu
@@ -191,7 +193,10 @@ def main():
             
         if gpio.input(but_right) == False or is_shutdown == 1:
 
-            parser.set('Var_Verif', "is_shutdown", str(1))
+            parser['Var_Verif'][ "is_shutdown"] = 1
+            with open("config.ini", 'w') as configfile:
+                parser.write(configfile)
+
             time.sleep(1)
             # Measuring loop
             growth_value = 0
@@ -211,7 +216,9 @@ def main():
                         growth_value, weight = measurement_pipeline()
 
                 if gpio.input(but_right) == False:
-                            parser.set('Var_Verif', "is_shutdown", str(0))
+                            parser['Var_Verif'][ "is_shutdown"] = 1
+                            with open("config.ini", 'w') as configfile:
+                                parser.write(configfile)
                             # Go back to the main menu
                             break
             time.sleep(1)
