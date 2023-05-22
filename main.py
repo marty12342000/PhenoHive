@@ -216,7 +216,7 @@ def main():
                         growth_value, weight = measurement_pipeline()
 
                 if gpio.input(but_right) == False:
-                            parser['Var_Verif'][ "is_shutdown"] = str(1)
+                            parser['Var_Verif'][ "is_shutdown"] = str(0)
                             with open("config.ini", 'w') as configfile:
                                 parser.write(configfile)
                             # Go back to the main menu
