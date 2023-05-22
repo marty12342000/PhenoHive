@@ -34,7 +34,7 @@ def init():
         
     ID_station = str(parser["ID_station"]["ID"])
 
-    is_shutdown = bool(parser['Var_Verif']["is_shutdown"])
+    is_shutdown = int(parser['Var_Verif']["is_shutdown"])
 
     path = str(parser["Path_to_save_img"]["absolute_path"])
 
@@ -189,9 +189,9 @@ def main():
 
                 
             
-        if gpio.input(but_right) == False or is_shutdown == True:
+        if gpio.input(but_right) == False or is_shutdown == 1:
 
-            parser.set('Var_Verif', "is_shutdown", "True")
+            parser.set('Var_Verif', "is_shutdown", str(1))
             time.sleep(1)
             # Measuring loop
             growth_value = 0
@@ -211,7 +211,7 @@ def main():
                         growth_value, weight = measurement_pipeline()
 
                 if gpio.input(but_right) == False:
-                            parser.set('Var_Verif', "is_shutdown", "False")
+                            parser.set('Var_Verif', "is_shutdown", str(0))
                             # Go back to the main menu
                             break
             time.sleep(1)
