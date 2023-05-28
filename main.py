@@ -127,7 +127,7 @@ def measurement_pipeline():
     # Get numerical value from the photo
     growth_value = get_total_length(image_path=path_img, channel=channel, kernel_size=kernel_size)
     # Get weight 
-    weight = get_weight()
+    weight = get_weight() - tare
     weight = weight*load_cell_cal
     # Send data to the DB
     field_ID = "SationID_%s" % ID_station
