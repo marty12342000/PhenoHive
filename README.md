@@ -1,2 +1,2 @@
 # PhenoHive
-Raspberry pi based low-cost phenotyping station 
+Low-cost Raspberry pi based phenotyping station 
