@@ -130,7 +130,7 @@ def measurement_pipeline():
     weight = get_weight() - tare
     weight = weight*load_cell_cal
     # Send data to the DB
-    field_ID = "SationID_%s" % ID_station
+    field_ID = "StationID_%s" % ID_station
     send_to_db(client, bucket, "Growth", field_ID, growth_value)
     send_to_db(client, bucket, "Weight", field_ID, weight)
     return growth_value, weight
@@ -216,6 +216,8 @@ def main():
                         growth_value, weight = measurement_pipeline()
 
                 if gpio.input(but_right) == False:
+                            global is_shutdown
+                            is_shutdown = 0
                             parser['Var_Verif'][ "is_shutdown"] = str(0)
                             with open("config.ini", 'w') as configfile:
                                 parser.write(configfile)
