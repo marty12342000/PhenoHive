@@ -22,7 +22,7 @@ from show_display import show_image, show_logo, show_measuring_menu, show_menu, 
 
 def init():
 
-    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx, time_interval, load_cell_cal, tare, ID_station, parser, is_shutdown
+    global LED, token, org, bucket, url, path, pot_limit, channel, kernel_size, fill_size, cam, client, disp, WIDTH, HEIGHT, but_left, but_right, hx, time_interval, load_cell_cal, tare, ID_station, parser
     # Parse Config.ini file
     parser = configparser.ConfigParser()
     parser.read('config.ini')
@@ -145,6 +145,7 @@ def main():
     show_image(disp, WIDTH, HEIGHT, "/home/pi/Desktop/phenostation/assets/logo_elia.jpg")
 
     while True:
+        is_shutdown = int(parser['Var_Verif']["is_shutdown"])
         show_menu(disp, WIDTH, HEIGHT)
         #Main menu loop
 
@@ -192,7 +193,6 @@ def main():
                 
             
         if gpio.input(but_right) == False or is_shutdown == 1:
-
             parser['Var_Verif'][ "is_shutdown"] = str(1)
             with open("config.ini", 'w') as configfile:
                 parser.write(configfile)
@@ -216,7 +216,6 @@ def main():
                         growth_value, weight = measurement_pipeline()
 
                 if gpio.input(but_right) == False:
-                            is_shutdown = 0
                             parser['Var_Verif'][ "is_shutdown"] = str(0)
                             with open("config.ini", 'w') as configfile:
                                 parser.write(configfile)
