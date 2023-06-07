@@ -216,7 +216,6 @@ def main():
                         growth_value, weight = measurement_pipeline()
 
                 if gpio.input(but_right) == False:
-                            global is_shutdown
                             is_shutdown = 0
                             parser['Var_Verif'][ "is_shutdown"] = str(0)
                             with open("config.ini", 'w') as configfile:
